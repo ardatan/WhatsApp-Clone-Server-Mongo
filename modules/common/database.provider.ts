@@ -1,49 +1,23 @@
 import { Injectable, ProviderScope } from '@graphql-modules/di';
 import { OnResponse } from '@graphql-modules/core';
-import { Pool, PoolClient, QueryResult } from 'pg';
-import { SQLStatement } from 'sql-template-strings';
-import Dataloader from 'dataloader';
+import { MongoClient, Collection } from 'mongodb';
+import { Pool } from 'generic-pool';
 
 @Injectable({
   scope: ProviderScope.Session,
 })
 export class Database implements OnResponse {
-  private instance: PoolClient;
-  private loader: Dataloader<string | SQLStatement, QueryResult>;
+  private instance: MongoClient;
 
-  constructor(private pool: Pool) {
-    this.loader = new Dataloader(
-      queries =>
-        Promise.all(
-          queries.map(async query => {
-            const db = await this.getClient();
-            return db.query(query);
-          })
-        ),
-      {
-        cacheKeyFn: (key: string | SQLStatement) => {
-          let id: string;
-
-          if (typeof key === 'string') {
-            id = key;
-          } else {
-            id = key.text + ' - ' + JSON.stringify(key.values);
-          }
-
-          return id;
-        },
-        batch: false,
-      }
-    );
-  }
+  constructor(private pool: Pool<MongoClient>) {}
 
   async onRequest() {
-    this.instance = await this.pool.connect();
+    this.instance = await this.pool.acquire();
   }
 
   onResponse() {
     if (this.instance) {
-      this.instance.release();
+      this.pool.release(this.instance);
     }
   }
 
@@ -51,7 +25,7 @@ export class Database implements OnResponse {
     return this.instance;
   }
 
-  query(query: SQLStatement | string) {
-    return this.loader.load(query);
+  collection<T>(collectionName: string): Collection<T> {
+    return this.instance.db().collection(collectionName);
   }
 }

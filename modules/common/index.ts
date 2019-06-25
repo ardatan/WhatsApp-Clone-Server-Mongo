@@ -1,14 +1,12 @@
 import { GraphQLModule } from '@graphql-modules/core';
-import { ProviderScope } from '@graphql-modules/di';
 import { gql } from 'apollo-server-express';
 import { GraphQLDateTime } from 'graphql-iso-date';
-import { Pool } from 'pg';
+import { Pool } from 'generic-pool';
 import { pool } from '../../db';
 import { Resolvers } from '../../types/graphql';
 import { Database } from './database.provider';
 import { PubSub } from './pubsub.provider';
-
-const { PostgresPubSub } = require('graphql-postgres-subscriptions');
+import { DIRECTIVES } from '@graphql-codegen/typescript-mongodb';
 
 const typeDefs = gql`
   scalar DateTime
@@ -24,19 +22,13 @@ const typeDefs = gql`
   type Subscription {
     _dummy: Boolean
   }
+
+  ${DIRECTIVES}
 `;
 
 const resolvers: Resolvers = {
   DateTime: GraphQLDateTime,
 };
-
-const pubsub = new PostgresPubSub({
-  host: 'localhost',
-  port: 5432,
-  user: 'testuser',
-  password: 'testpassword',
-  database: 'whatsapp',
-});
 
 export default new GraphQLModule({
   name: 'common',
@@ -47,11 +39,7 @@ export default new GraphQLModule({
       provide: Pool,
       useValue: pool,
     },
-    {
-      provide: PubSub,
-      scope: ProviderScope.Application,
-      useValue: pubsub,
-    },
+    PubSub,
     Database,
   ],
 });

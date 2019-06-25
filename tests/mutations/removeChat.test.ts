@@ -8,12 +8,12 @@ describe('Mutation.removeChat', () => {
   beforeEach(resetDb);
 
   it('removes chat by id', async () => {
-    mockAuth(1);
+    mockAuth('111111111111111111111111');
 
     const { query, mutate } = createTestClient(server);
 
     const addChatRes = await mutate({
-      variables: { chatId: '1' },
+      variables: { chatId: '111111111111111111111111' },
       mutation: gql`
         mutation RemoveChat($chatId: ID!) {
           removeChat(chatId: $chatId)
@@ -23,10 +23,10 @@ describe('Mutation.removeChat', () => {
 
     expect(addChatRes.data).toBeDefined();
     expect(addChatRes.errors).toBeUndefined();
-    expect(addChatRes.data!.removeChat).toEqual('1');
+    expect(addChatRes.data!.removeChat).toEqual('111111111111111111111111');
 
     const getChatRes = await query({
-      variables: { chatId: '1' },
+      variables: { chatId: '111111111111111111111111' },
       query: gql`
         query GetChat($chatId: ID!) {
           chat(chatId: $chatId) {

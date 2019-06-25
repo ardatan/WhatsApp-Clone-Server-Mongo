@@ -1,7 +1,8 @@
 import { Injectable, Inject, ProviderScope } from '@graphql-modules/di';
-import sql from 'sql-template-strings';
 import bcrypt from 'bcrypt';
 import { Database } from '../common/database.provider';
+import { ObjectID } from 'mongodb';
+import { UserDbObject } from '../../types/graphql';
 
 const DEFAULT_PROFILE_PIC = 'https://raw.githubusercontent.com/Urigo/WhatsApp-Clone-Client-React/legacy/public/assets/default-profile-pic.jpg'
 
@@ -11,28 +12,20 @@ const DEFAULT_PROFILE_PIC = 'https://raw.githubusercontent.com/Urigo/WhatsApp-Cl
 export class Users {
   @Inject() private db: Database;
 
-  async findById(userId: string) {
-    const { rows } = await this.db.query(
-      sql`SELECT * FROM users WHERE id = ${userId}`
-    );
-
-    return rows[0] || null;
+  private get usersCollection() {
+    return this.db.collection<UserDbObject>('users');
   }
 
-  async findAllExcept(userId: string) {
-    const { rows } = await this.db.query(
-      sql`SELECT * FROM users WHERE id != ${userId}`
-    );
+  async findById(userId: ObjectID) {
+    return this.usersCollection.findOne({ _id: userId }) || null;
+  }
 
-    return rows;
+  async findAllExcept(userId: ObjectID) {
+    return this.usersCollection.find({ _id: { $ne: userId } }).toArray();
   }
 
   async findByUsername(username: string) {
-    const { rows } = await this.db.query(
-      sql`SELECT * FROM users WHERE username = ${username}`
-    );
-
-    return rows[0] || null;
+    return (await this.usersCollection.findOne({ username })) || null;
   }
 
   async newUser({
@@ -45,13 +38,18 @@ export class Users {
     password: string;
   }) {
     const passwordHash = bcrypt.hashSync(password, bcrypt.genSaltSync(8));
-    const createdUserQuery = await this.db.query(sql`
-        INSERT INTO users(password, picture, username, name)
-        VALUES(${passwordHash}, ${DEFAULT_PROFILE_PIC}, ${username}, ${name})
-        RETURNING *
-      `);
-    const user = createdUserQuery.rows[0];
+    const { insertedId } = await this.usersCollection.insertOne({
+      password: passwordHash,
+      picture: DEFAULT_PROFILE_PIC,
+      username,
+      name,
+    } as UserDbObject);
 
-    return user;
+    return {
+      _id: insertedId,
+      picture: DEFAULT_PROFILE_PIC,
+      username,
+      name,
+    } as UserDbObject;
   }
 }

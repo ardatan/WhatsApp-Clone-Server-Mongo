@@ -8,7 +8,7 @@ describe('Query.me', () => {
   beforeEach(resetDb);
 
   it('should fetch current user', async () => {
-    mockAuth(1);
+    mockAuth('111111111111111111111111');
 
     const { query } = createTestClient(server);
 

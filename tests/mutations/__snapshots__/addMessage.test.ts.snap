@@ -4,7 +4,6 @@ exports[`Mutation.addMessage should add message to specified chat 1`] = `
 Object {
   "addMessage": Object {
     "content": "Hello World",
-    "id": "5",
   },
 }
 `;
@@ -12,10 +11,9 @@ Object {
 exports[`Mutation.addMessage should add message to specified chat 2`] = `
 Object {
   "chat": Object {
-    "id": "1",
+    "id": "111111111111111111111111",
     "lastMessage": Object {
       "content": "Hello World",
-      "id": "5",
     },
   },
 }

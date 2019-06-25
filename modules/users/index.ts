@@ -6,10 +6,10 @@ import { Users } from './users.provider';
 import { Auth } from './auth.provider';
 
 const typeDefs = gql`
-  type User {
-    id: ID!
-    name: String!
-    picture: String
+  type User @entity(additionalFields: [{ path: "password", type: "string" }, { path: "username", type: "string" }]) {
+    id: ID! @id
+    name: String! @column
+    picture: String @column
   }
 
   extend type Query {
@@ -29,6 +29,9 @@ const typeDefs = gql`
 `;
 
 const resolvers: Resolvers = {
+  User: {
+    id: user => user._id.toString(),
+  },
   Query: {
     me(root, args, { injector }) {
       return injector.get(Auth).currentUser();
@@ -38,7 +41,7 @@ const resolvers: Resolvers = {
 
       if (!currentUser) return [];
 
-      return injector.get(Users).findAllExcept(currentUser.id);
+      return injector.get(Users).findAllExcept(currentUser._id);
     },
   },
   Mutation: {

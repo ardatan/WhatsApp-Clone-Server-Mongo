@@ -3,14 +3,13 @@
 exports[`Mutation.addChat creates a new chat between current user and specified recipient 1`] = `
 Object {
   "addChat": Object {
-    "id": "5",
     "name": "Bryan Wallace",
     "participants": Array [
       Object {
-        "id": "2",
+        "id": "222222222222222222222222",
       },
       Object {
-        "id": "3",
+        "id": "333333333333333333333333",
       },
     ],
   },
@@ -20,14 +19,13 @@ Object {
 exports[`Mutation.addChat creates a new chat between current user and specified recipient 2`] = `
 Object {
   "chat": Object {
-    "id": "5",
     "name": "Bryan Wallace",
     "participants": Array [
       Object {
-        "id": "2",
+        "id": "222222222222222222222222",
       },
       Object {
-        "id": "3",
+        "id": "333333333333333333333333",
       },
     ],
   },
@@ -37,14 +35,13 @@ Object {
 exports[`Mutation.addChat returns the existing chat if so 1`] = `
 Object {
   "addChat": Object {
-    "id": "1",
     "name": "Ethan Gonzalez",
     "participants": Array [
       Object {
-        "id": "1",
+        "id": "111111111111111111111111",
       },
       Object {
-        "id": "2",
+        "id": "222222222222222222222222",
       },
     ],
   },

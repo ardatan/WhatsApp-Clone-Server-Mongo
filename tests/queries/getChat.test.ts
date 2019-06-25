@@ -8,12 +8,12 @@ describe('Query.chat', () => {
   beforeEach(resetDb);
 
   it('should fetch specified chat', async () => {
-    mockAuth(1);
+    mockAuth('111111111111111111111111');
 
     const { query } = createTestClient(server);
 
     const res = await query({
-      variables: { chatId: '1' },
+      variables: { chatId: '111111111111111111111111' },
       query: gql`
         query GetChat($chatId: ID!) {
           chat(chatId: $chatId) {

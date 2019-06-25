@@ -8,16 +8,15 @@ describe('Mutation.addMessage', () => {
   beforeEach(resetDb);
 
   it('should add message to specified chat', async () => {
-    mockAuth(1);
+    mockAuth('111111111111111111111111');
 
     const { query, mutate } = createTestClient(server);
 
     const addMessageRes = await mutate({
-      variables: { chatId: '1', content: 'Hello World' },
+      variables: { chatId: '111111111111111111111111', content: 'Hello World' },
       mutation: gql`
         mutation AddMessage($chatId: ID!, $content: String!) {
           addMessage(chatId: $chatId, content: $content) {
-            id
             content
           }
         }
@@ -29,13 +28,12 @@ describe('Mutation.addMessage', () => {
     expect(addMessageRes.data).toMatchSnapshot();
 
     const getChatRes = await query({
-      variables: { chatId: '1' },
+      variables: { chatId: '111111111111111111111111' },
       query: gql`
         query GetChat($chatId: ID!) {
           chat(chatId: $chatId) {
             id
             lastMessage {
-              id
               content
             }
           }

@@ -2,21 +2,21 @@ import { GraphQLModule } from '@graphql-modules/core';
 import { gql, withFilter } from 'apollo-server-express';
 import commonModule from '../common';
 import usersModule from '../users';
-import { Message, Chat } from '../../db';
-import { Resolvers } from '../../types/graphql';
+import { Resolvers, MessageDbObject, ChatDbObject } from '../../types/graphql';
 import { UnsplashApi } from './unsplash.api';
 import { Users } from './../users/users.provider';
 import { Auth } from './../users/auth.provider';
 import { Chats } from './chats.provider';
 import { PubSub } from '../common/pubsub.provider';
+import { ObjectID } from 'bson';
 
 const typeDefs = gql`
-  type Message {
-    id: ID!
-    content: String!
-    createdAt: DateTime!
-    chat: Chat
-    sender: User
+  type Message @entity {
+    id: ID! @id
+    content: String! @column
+    createdAt: DateTime! @column
+    chat: Chat! @link @map(path: "chatId")
+    sender: User @link @map(path: "senderUserId")
     recipient: User
     isMine: Boolean!
   }
@@ -24,16 +24,16 @@ const typeDefs = gql`
   type MessagesResult {
     cursor: Float
     hasMore: Boolean!
-    messages: [Message!]!
+    messages: [Message!]! @link
   }
 
-  type Chat {
-    id: ID!
-    name: String
-    picture: String
+  type Chat @entity {
+    id: ID! @id
+    name: String @column
+    picture: String @column
     lastMessage: Message
     messages(limit: Int!, after: Float): MessagesResult!
-    participants: [User!]!
+    participants: [User!]! @link @map(path: "participantUserIdList")
   }
 
   extend type Query {
@@ -56,40 +56,42 @@ const typeDefs = gql`
 
 const resolvers: Resolvers = {
   Message: {
+    id: message => message._id.toString(),
     createdAt(message) {
-      return new Date(message.created_at);
+      return new Date(message.createdAt);
     },
 
     async chat(message, args, { injector }) {
-      return injector.get(Chats).findChatById(message.chat_id);
+      return injector.get(Chats).findChatById(message.chatId);
     },
 
     async sender(message, args, { injector }) {
-      return injector.get(Users).findById(message.sender_user_id);
+      return injector.get(Users).findById(message.senderUserId!);
     },
 
     async recipient(message, args, { injector }) {
       return injector.get(Chats).firstRecipient({
-        chatId: message.chat_id,
-        userId: message.sender_user_id,
+        chatId: message.chatId,
+        userId: message.senderUserId!,
       });
     },
 
     async isMine(message, args, { injector }) {
       const currentUser = await injector.get(Auth).currentUser();
-      return message.sender_user_id === currentUser!.id;
+      return message.senderUserId === currentUser!._id;
     },
   },
 
   Chat: {
+    id: chat => chat._id.toString(),
     async name(chat, args, { injector }) {
       const currentUser = await injector.get(Auth).currentUser();
 
       if (!currentUser) return null;
 
       const participant = await injector.get(Chats).firstRecipient({
-        chatId: chat.id,
-        userId: currentUser.id,
+        chatId: chat._id,
+        userId: currentUser._id,
       });
 
       return participant ? participant.name : null;
@@ -101,8 +103,8 @@ const resolvers: Resolvers = {
       if (!currentUser) return null;
 
       const participant = await injector.get(Chats).firstRecipient({
-        chatId: chat.id,
-        userId: currentUser.id,
+        chatId: chat._id,
+        userId: currentUser._id,
       });
 
       return participant && participant.picture
@@ -112,18 +114,18 @@ const resolvers: Resolvers = {
 
     async messages(chat, args, { injector }) {
       return injector.get(Chats).findMessagesByChat({
-        chatId: chat.id,
+        chatId: chat._id,
         limit: args.limit,
         after: args.after,
       });
     },
 
     async lastMessage(chat, args, { injector }) {
-      return injector.get(Chats).lastMessage(chat.id);
+      return injector.get(Chats).lastMessage(chat._id);
     },
 
     async participants(chat, args, { injector }) {
-      return injector.get(Chats).participants(chat.id);
+      return injector.get(Chats).participants(chat._id);
     },
   },
 
@@ -133,7 +135,7 @@ const resolvers: Resolvers = {
 
       if (!currentUser) return [];
 
-      return injector.get(Chats).findChatsByUser(currentUser.id);
+      return injector.get(Chats).findChatsByUser(currentUser._id);
     },
 
     async chat(root, { chatId }, { injector }) {
@@ -143,7 +145,7 @@ const resolvers: Resolvers = {
 
       return injector
         .get(Chats)
-        .findChatByUser({ chatId, userId: currentUser.id });
+        .findChatByUser({ chatId: new ObjectID(chatId), userId: currentUser._id });
     },
   },
 
@@ -155,7 +157,7 @@ const resolvers: Resolvers = {
 
       return injector
         .get(Chats)
-        .addMessage({ chatId, content, userId: currentUser.id });
+        .addMessage({ chatId: new ObjectID(chatId), content, userId: currentUser._id });
     },
 
     async addChat(root, { recipientId }, { injector }) {
@@ -165,7 +167,7 @@ const resolvers: Resolvers = {
 
       return injector
         .get(Chats)
-        .addChat({ recipientId, userId: currentUser.id });
+        .addChat({ recipientId: new ObjectID(recipientId), userId: currentUser._id });
     },
 
     async removeChat(root, { chatId }, { injector }) {
@@ -173,7 +175,9 @@ const resolvers: Resolvers = {
 
       if (!currentUser) return null;
 
-      return injector.get(Chats).removeChat({ chatId, userId: currentUser.id });
+      await injector.get(Chats).removeChat({ chatId: new ObjectID(chatId), userId: currentUser._id });
+
+      return chatId;
     },
   },
 
@@ -183,7 +187,7 @@ const resolvers: Resolvers = {
         (root, args, { injector }) =>
           injector.get(PubSub).asyncIterator('messageAdded'),
         async (
-          { messageAdded }: { messageAdded: Message },
+          { messageAdded }: { messageAdded: MessageDbObject },
           args,
           { injector }
         ) => {
@@ -192,7 +196,7 @@ const resolvers: Resolvers = {
           if (!currentUser) return false;
 
           return injector.get(Chats).isParticipant({
-            chatId: messageAdded.chat_id,
+            chatId: messageAdded.chatId,
             userId: currentUser.id,
           });
         }
@@ -203,14 +207,14 @@ const resolvers: Resolvers = {
       subscribe: withFilter(
         (root, args, { injector }) =>
           injector.get(PubSub).asyncIterator('chatAdded'),
-        async ({ chatAdded }: { chatAdded: Chat }, args, { injector }) => {
+        async ({ chatAdded }: { chatAdded: ChatDbObject }, args, { injector }) => {
           const currentUser = await injector.get(Auth).currentUser();
 
           if (!currentUser) return false;
 
           return injector.get(Chats).isParticipant({
-            chatId: chatAdded.id,
-            userId: currentUser.id,
+            chatId: chatAdded._id,
+            userId: currentUser._id,
           });
         }
       ),
@@ -220,13 +224,13 @@ const resolvers: Resolvers = {
       subscribe: withFilter(
         (root, args, { injector }) =>
           injector.get(PubSub).asyncIterator('chatRemoved'),
-        async ({ targetChat }: { targetChat: Chat }, args, { injector }) => {
+        async ({ targetChat }: { targetChat: ChatDbObject }, args, { injector }) => {
           const currentUser = await injector.get(Auth).currentUser();
 
           if (!currentUser) return false;
 
           return injector.get(Chats).isParticipant({
-            chatId: targetChat.id,
+            chatId: targetChat._id,
             userId: currentUser.id,
           });
         }

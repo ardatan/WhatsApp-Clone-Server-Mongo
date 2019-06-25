@@ -8,7 +8,7 @@ describe('Query.chats', () => {
   beforeEach(resetDb);
 
   it('should fetch all chats', async () => {
-    mockAuth(1);
+    mockAuth('111111111111111111111111');
 
     const { query } = createTestClient(server);
 

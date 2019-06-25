@@ -4,6 +4,7 @@ generates:
     schema: ./modules/*/*.ts
     plugins:
       - typescript
+      - typescript-mongodb
       - typescript-resolvers
     config:
       useIndexSignature: true
@@ -11,9 +12,9 @@ generates:
       mappers:
         # import { Message } from '../db'
         # The root types of Message resolvers
-        User: ../db#User
-        Message: ../db#Message
-        Chat: ../db#Chat
+        User: UserDbObject
+        Message: MessageDbObject
+        Chat: ChatDbObject
       scalars:
         # e.g. Message.createdAt will be of type Date
         Date: Date

@@ -6,15 +6,15 @@ import jwt from 'jsonwebtoken';
 import { secret, expiration } from '../../env';
 import { validateLength, validatePassword } from '../../validators';
 import { Users } from './users.provider';
-import { User } from '../../db';
+import { UserDbObject } from '../../types/graphql';
 
 @Injectable({
   scope: ProviderScope.Session,
 })
 export class Auth {
-  @Inject() private users: Users;
+  @Inject() users: Users;
   @Inject() private module: ModuleSessionInfo;
-  private _currentUser: User;
+  private _currentUser: UserDbObject;
 
   private get req() {
     return this.module.session.req || this.module.session.request;
@@ -76,7 +76,7 @@ export class Auth {
     });
   }
 
-  async currentUser(): Promise<User | null> {
+  async currentUser(): Promise<UserDbObject | null> {
     if (this._currentUser) {
       return this._currentUser;
     }
@@ -85,7 +85,10 @@ export class Auth {
       const username = jwt.verify(this.req.cookies.authToken, secret) as string;
 
       if (username) {
-        this._currentUser = await this.users.findByUsername(username);
+        const currentUser = await this.users.findByUsername(username);
+        if (currentUser) {
+          this._currentUser = currentUser || null;
+        }
         return this._currentUser;
       }
     }

@@ -3,7 +3,7 @@
 exports[`Query.me should fetch current user 1`] = `
 Object {
   "me": Object {
-    "id": "1",
+    "id": "111111111111111111111111",
     "name": "Ray Edwards",
     "picture": "https://randomuser.me/api/portraits/thumb/lego/1.jpg",
   },

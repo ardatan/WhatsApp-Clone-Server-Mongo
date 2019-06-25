@@ -8,7 +8,7 @@ describe('Query.getUsers', () => {
   beforeEach(resetDb);
 
   it('should fetch all users except the one signed-in', async () => {
-    mockAuth(1);
+    mockAuth('111111111111111111111111');
 
     const { query } = createTestClient(server);
 
@@ -28,7 +28,7 @@ describe('Query.getUsers', () => {
     expect(res.errors).toBeUndefined();
     expect(res.data).toMatchSnapshot();
 
-    mockAuth(2);
+    mockAuth('222222222222222222222222');
 
     res = await query({
       query: gql`

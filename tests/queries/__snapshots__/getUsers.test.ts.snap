@@ -4,22 +4,22 @@ exports[`Query.getUsers should fetch all users except the one signed-in 1`] = `
 Object {
   "users": Array [
     Object {
-      "id": "2",
+      "id": "222222222222222222222222",
       "name": "Ethan Gonzalez",
       "picture": "https://randomuser.me/api/portraits/thumb/men/1.jpg",
     },
     Object {
-      "id": "3",
+      "id": "333333333333333333333333",
       "name": "Bryan Wallace",
       "picture": "https://randomuser.me/api/portraits/thumb/men/2.jpg",
     },
     Object {
-      "id": "4",
+      "id": "444444444444444444444444",
       "name": "Avery Stewart",
       "picture": "https://randomuser.me/api/portraits/thumb/women/1.jpg",
     },
     Object {
-      "id": "5",
+      "id": "555555555555555555555555",
       "name": "Katie Peterson",
       "picture": "https://randomuser.me/api/portraits/thumb/women/2.jpg",
     },
@@ -31,22 +31,22 @@ exports[`Query.getUsers should fetch all users except the one signed-in 2`] = `
 Object {
   "users": Array [
     Object {
-      "id": "1",
+      "id": "111111111111111111111111",
       "name": "Ray Edwards",
       "picture": "https://randomuser.me/api/portraits/thumb/lego/1.jpg",
     },
     Object {
-      "id": "3",
+      "id": "333333333333333333333333",
       "name": "Bryan Wallace",
       "picture": "https://randomuser.me/api/portraits/thumb/men/2.jpg",
     },
     Object {
-      "id": "4",
+      "id": "444444444444444444444444",
       "name": "Avery Stewart",
       "picture": "https://randomuser.me/api/portraits/thumb/women/1.jpg",
     },
     Object {
-      "id": "5",
+      "id": "555555555555555555555555",
       "name": "Katie Peterson",
       "picture": "https://randomuser.me/api/portraits/thumb/women/2.jpg",
     },
